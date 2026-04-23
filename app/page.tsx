@@ -66,6 +66,7 @@ const getBaseQuestions = () => [
   { id: "goals", label: "What is your #1 goal for the next 90 days?", type: "textarea", placeholder: "e.g. Generate 10 new leads per month, build my brand online, grow my referral network..." },
   { id: "past_marketing", label: "Have you tried digital marketing before?", type: "radio", options: ["Yes — and it worked well", "Yes — but it didn't work", "No — this is my first time"] },
   { id: "colors", label: "Do you have existing brand colors and/or a logo?", type: "radio", options: ["Yes — I'll send them over", "I have a logo but no defined colors", "No — I need branding help"] },
+  { id: "colors_note", label: "Send us your logo & brand files", type: "info", message: "Please email your logo (preferably in PNG or SVG format), brand guidelines, and any color codes you use to:\n\njay@m.botmakers.ai\n\nThis helps us match your brand perfectly across all content.", conditional: (a: Record<string, string>) => a.colors && a.colors !== "No — I need branding help" },
   { id: "competitors", label: "Who are your main competitors? (Optional)", type: "text", placeholder: "e.g. Other local agents, national firms..." },
 ];
 
@@ -83,12 +84,14 @@ const getBlogQuestions = () => [
 const getAvatarQuestions = () => [
   { id: "avatar_style", label: "For AI avatar videos, what style do you prefer?", type: "radio", options: ["Realistic avatar that looks like me", "Professional generic avatar", "Faceless / animated style", "Not sure yet — show me options"] },
   { id: "avatar_topics", label: "What should your first video series cover?", type: "textarea", placeholder: "e.g. 5-part series on understanding teacher pensions, life insurance myths for families..." },
+  { id: "avatar_note", label: "Send us your headshot for AI avatar videos", type: "info", message: "To create your personalized AI avatar, please email a professional headshot (clear, well-lit, front-facing) to:\n\njay@m.botmakers.ai\n\nWe'll use this to build a realistic avatar that represents you in your video content." },
 ];
 
 const getPodcastQuestions = () => [
   { id: "podcast_name", label: "Do you have a name in mind for your podcast?", type: "text", placeholder: "e.g. The Teachers Financial Wellness Show..." },
   { id: "podcast_topics", label: "What topics would your podcast cover?", type: "textarea", placeholder: "e.g. Financial wellness for teachers, insurance myths, retirement planning tips..." },
   { id: "podcast_audience", label: "Who is your podcast for?", type: "text", placeholder: "e.g. Texas educators, small business owners..." },
+  { id: "podcast_note", label: "Send us your voice sample for podcast production", type: "info", message: "To produce your podcast episodes, we need a short voice recording (30–60 seconds of you speaking naturally). You can record one on your phone and email it to:\n\njay@m.botmakers.ai\n\nThis helps us clone your voice accurately for professional-sounding episodes." },
 ];
 
 interface Package {
@@ -403,6 +406,21 @@ export default function ApexOnboardingForm() {
                 )}
                 {currentQuestion.type === "textarea" && (
                   <textarea style={{ ...inputStyle, minHeight: "110px", resize: "vertical" }} placeholder={currentQuestion.placeholder} value={(answers[currentQuestion.id] as string) || ""} onChange={e => updateAnswer(currentQuestion.id, e.target.value)} />
+                )}
+
+                {currentQuestion.type === "info" && (
+                  <div style={{ background: "#EBF3FC", borderRadius: "14px", padding: "20px 24px", border: "1.5px solid rgba(16,42,94,0.15)" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                      <span style={{ fontSize: "1.4rem", lineHeight: "1" }}>📎</span>
+                      <div>
+                        {currentQuestion.message.split("\n").map((line: string, i: number) => (
+                          <p key={i} style={{ color: line.includes("@") ? "#102A5E" : "#334155", fontWeight: line.includes("@") ? "700" : "400", fontSize: "0.875rem", lineHeight: "1.6", marginBottom: line === "" ? "8px" : "2px" }}>
+                            {line || "\u00A0"}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 <div style={{ display: "flex", gap: "12px", marginTop: "28px" }}>
