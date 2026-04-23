@@ -218,10 +218,10 @@ export default function ApexOnboardingForm() {
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #081D3A 0%, #102A5E 50%, #1A3F7A 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
       <div style={{ width: "100%", maxWidth: "700px" }}>
         <div style={{ textAlign: "center", marginBottom: "28px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "14px", background: "rgba(255,255,255,0.10)", borderRadius: "14px", padding: "12px 28px", marginBottom: "8px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "14px", background: "#FFFFFF", borderRadius: "14px", padding: "12px 28px", marginBottom: "8px", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
             <Image src="/apex-logo.png" alt="APEX Affinity Group" width={160} height={48} style={{ height: "42px", width: "auto" }} priority />
-            <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "1.2rem", fontWeight: "300" }}>|</span>
-            <span style={{ color: "rgba(255,255,255,0.75)", fontWeight: "500", fontSize: "0.875rem" }}>Client Onboarding</span>
+            <span style={{ color: "#CBD5E1", fontSize: "1.2rem", fontWeight: "300" }}>|</span>
+            <span style={{ color: "#102A5E", fontWeight: "600", fontSize: "0.875rem" }}>Client Onboarding</span>
           </div>
           <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.75rem" }}>Powered by BotMakers.ai</p>
         </div>
