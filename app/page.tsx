@@ -147,6 +147,7 @@ export default function ApexOnboardingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState("");
 
   const selectedPackage = packages.find(p => p.id === formData.package);
   const allQuestions = formData.package ? getPackageQuestions(formData.package, selectedPackage!) : [];
@@ -412,12 +413,29 @@ export default function ApexOnboardingForm() {
                   <div style={{ background: "#EBF3FC", borderRadius: "14px", padding: "20px 24px", border: "1.5px solid rgba(16,42,94,0.15)" }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
                       <span style={{ fontSize: "1.4rem", lineHeight: "1" }}>📎</span>
-                      <div>
-                        {currentQuestion.message.split("\n").map((line: string, i: number) => (
-                          <p key={i} style={{ color: line.includes("@") ? "#102A5E" : "#334155", fontWeight: line.includes("@") ? "700" : "400", fontSize: "0.875rem", lineHeight: "1.6", marginBottom: line === "" ? "8px" : "2px" }}>
-                            {line || "\u00A0"}
-                          </p>
-                        ))}
+                      <div style={{ flex: 1 }}>
+                        {currentQuestion.message.split("\n").map((line: string, i: number) => {
+                          const emails = line.match(/[\w.-]+@[\w.-]+\.\w+/g);
+                          if (emails && emails.length > 0) {
+                            const allEmails = emails.join(", ");
+                            return (
+                              <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                                <p style={{ color: "#102A5E", fontWeight: "700", fontSize: "0.875rem", lineHeight: "1.6" }}>{line}</p>
+                                <button
+                                  onClick={() => { navigator.clipboard.writeText(allEmails); setCopiedEmail(allEmails); setTimeout(() => setCopiedEmail(""), 2000); }}
+                                  style={{ background: copiedEmail === allEmails ? "#102A5E" : "white", color: copiedEmail === allEmails ? "white" : "#102A5E", border: "1.5px solid #102A5E", borderRadius: "8px", padding: "3px 10px", fontSize: "0.7rem", fontWeight: "700", cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s" }}
+                                >
+                                  {copiedEmail === allEmails ? "✓ Copied!" : "Copy"}
+                                </button>
+                              </div>
+                            );
+                          }
+                          return (
+                            <p key={i} style={{ color: "#334155", fontWeight: "400", fontSize: "0.875rem", lineHeight: "1.6", marginBottom: line === "" ? "8px" : "2px" }}>
+                              {line || "\u00A0"}
+                            </p>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
