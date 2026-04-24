@@ -55,18 +55,40 @@ const ctaOptions = [
   "Call me directly", "Download a free resource", "Sign up / register",
 ];
 
+const socialPlatforms = [
+  "Facebook", "Instagram", "LinkedIn", "TikTok",
+  "X / Twitter", "YouTube", "Pinterest", "Other",
+];
+
+const domainHosts = [
+  "GoDaddy", "Namecheap", "Google Domains", "Cloudflare",
+  "Squarespace", "Wix", "Bluehost", "HostGator", "Other / Not sure",
+];
+
+const communicationMethods = [
+  "Email", "Phone call", "Text / SMS", "Slack", "Zoom / Video call",
+];
+
 const getBaseQuestions = () => [
   { id: "website", label: "Do you have an existing website?", type: "radio", options: ["Yes — and I love it", "Yes — but it needs work", "No website yet"] },
   { id: "website_url", label: "What is your website URL?", type: "text", placeholder: "https://yourwebsite.com", conditional: (a: Record<string, string>) => a.website && a.website !== "No website yet" },
-  { id: "social_existing", label: "Which social media platforms do you currently use?", type: "checkbox", options: ["Facebook", "Instagram", "LinkedIn", "TikTok", "X / Twitter", "YouTube", "None yet"] },
-  { id: "social_active", label: "How active are you on social media today?", type: "radio", options: ["I post regularly", "I post occasionally", "I barely post", "Not at all"] },
+  { id: "domain", label: "Do you already have a domain name?", type: "radio", options: ["Yes", "No — I need one"] },
+  { id: "domain_host", label: "Where is your domain hosted?", type: "radio", options: domainHosts, conditional: (a: Record<string, string>) => a.domain === "Yes" },
+  { id: "domain_names", label: "Give us 5 possible domain name ideas", type: "textarea", placeholder: "e.g. myinsuranceagency.com, rigobenefits.com, newhorizonscoverage.com...", helperText: "We ask for 5 because some domain names may already be taken. Having backups helps us move faster.", conditional: (a: Record<string, string>) => a.domain === "No — I need one" },
+  { id: "contacts", label: "Who are the key points of contact for this project?", type: "contacts" },
+  { id: "preferred_communication", label: "How do you prefer to be contacted?", type: "checkbox", options: communicationMethods },
+  { id: "business_address", label: "What is your business address / location?", type: "text", placeholder: "This helps us optimize for local SEO and your Google Business Profile" },
+  { id: "social_media", label: "What social media accounts does your brand use?", type: "social_media" },
   { id: "target_audience", label: "Who is your ideal customer? Describe them briefly.", type: "textarea", placeholder: "e.g. Texas teachers ages 30–55 who need help understanding their retirement options..." },
   { id: "top_services", label: "What are your top 2–3 services or products you want to promote?", type: "textarea", placeholder: "e.g. Retirement planning, health insurance reviews, life insurance..." },
   { id: "tone", label: "How would you describe your brand personality?", type: "radio", options: ["Professional & formal", "Friendly & conversational", "Bold & energetic", "Educational & informative", "Luxury & premium"] },
   { id: "goals", label: "What is your #1 goal for the next 90 days?", type: "textarea", placeholder: "e.g. Generate 10 new leads per month, build my brand online, grow my referral network..." },
+  { id: "timeline", label: "When do you ideally want to go live?", type: "radio", options: ["ASAP — as soon as possible", "Within 2 weeks", "Within a month", "No rush — whenever it's ready"] },
   { id: "past_marketing", label: "Have you tried digital marketing before?", type: "radio", options: ["Yes — and it worked well", "Yes — but it didn't work", "No — this is my first time"] },
   { id: "colors", label: "Do you have existing brand colors and/or a logo?", type: "radio", options: ["Yes — I'll send them over", "I have a logo but no defined colors", "No — I need branding help"] },
   { id: "colors_note", label: "Send us your logo & brand files", type: "info", message: "Please email your logo (preferably in PNG or SVG format), brand guidelines, and any color codes you use to:\n\ndessiah@m.botmakers.ai\n\nCC: tavaresdavis81@gmail.com & tdaniel@botmakers.ai\n\nThis helps us match your brand perfectly across all content.", conditional: (a: Record<string, string>) => a.colors && a.colors !== "No — I need branding help" },
+  { id: "brand_assets", label: "Beyond your logo, do you have any of these brand assets?", type: "checkbox", options: ["Brand style guide", "Defined fonts / typography", "Existing copy or taglines I like", "Photo/video library", "None of these"] },
+  { id: "content_donts", label: "Is there anything we should absolutely avoid in your content?", type: "textarea", placeholder: "e.g. Compliance restrictions, sensitive topics, competitor mentions, specific claims we can't make..." },
   { id: "competitors", label: "Who are your main competitors? (Optional)", type: "text", placeholder: "e.g. Other local agents, national firms..." },
 ];
 
@@ -136,6 +158,13 @@ const getPackageQuestions = (packageId: string, pkg: Package): any[] => {
 
 interface LandingPage { topic: string; audience: string; goal: string; services: string; }
 const emptyPage = (): LandingPage => ({ topic: "", audience: "", goal: "", services: "" });
+
+interface Contact { name: string; email: string; phone: string; role: string; }
+const emptyContact = (): Contact => ({ name: "", email: "", phone: "", role: "" });
+
+interface SocialAccount { platform: string; handle: string; }
+const emptySocial = (): SocialAccount => ({ platform: "", handle: "" });
+
 const STEPS = { INTRO: "intro", PACKAGE: "package", INTERVIEW: "interview", DONE: "done" };
 
 export default function ApexOnboardingForm() {
@@ -143,6 +172,8 @@ export default function ApexOnboardingForm() {
   const [formData, setFormData] = useState({ name: "", businessName: "", email: "", phone: "", industry: "", otherIndustry: "", package: "" });
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [landingPages, setLandingPages] = useState<LandingPage[]>([emptyPage()]);
+  const [contacts, setContacts] = useState<Contact[]>([emptyContact()]);
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccount[]>([emptySocial()]);
   const [currentQ, setCurrentQ] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -169,6 +200,14 @@ export default function ApexOnboardingForm() {
     setLandingPages(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
   const addPage = () => setLandingPages(prev => [...prev, emptyPage()]);
   const removePage = (index: number) => setLandingPages(prev => prev.filter((_, i) => i !== index));
+  const updateContact = (index: number, field: keyof Contact, value: string) =>
+    setContacts(prev => prev.map((c, i) => i === index ? { ...c, [field]: value } : c));
+  const addContact = () => setContacts(prev => [...prev, emptyContact()]);
+  const removeContact = (index: number) => setContacts(prev => prev.filter((_, i) => i !== index));
+  const updateSocial = (index: number, field: keyof SocialAccount, value: string) =>
+    setSocialAccounts(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  const addSocial = () => setSocialAccounts(prev => [...prev, emptySocial()]);
+  const removeSocial = (index: number) => setSocialAccounts(prev => prev.filter((_, i) => i !== index));
 
   const canProceedIntro = formData.name.trim() && formData.businessName.trim() && formData.email.trim() &&
     formData.industry && (formData.industry !== "Other" || formData.otherIndustry.trim());
@@ -177,14 +216,20 @@ export default function ApexOnboardingForm() {
     const lpSummary = landingPages.map((p, i) =>
       `  Page ${i + 1}: ${p.topic || "Untitled"}\n  Audience: ${p.audience || "N/A"}\n  Goal: ${p.goal || "N/A"}\n  Services: ${p.services || "N/A"}`
     ).join("\n\n");
+    const contactsSummary = contacts.filter(c => c.name.trim()).map((c, i) =>
+      `  Contact ${i + 1}: ${c.name}\n  Email: ${c.email || "N/A"}\n  Phone: ${c.phone || "N/A"}\n  Role: ${c.role || "N/A"}`
+    ).join("\n\n");
+    const socialSummary = socialAccounts.filter(s => s.platform.trim()).map((s, i) =>
+      `  Account ${i + 1}: ${s.platform} — ${s.handle || "N/A"}`
+    ).join("\n");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const qaSummary = visibleQuestions.filter((q: any) => q.type !== "landing_pages").map((q: any) => {
+    const qaSummary = visibleQuestions.filter((q: any) => q.type !== "landing_pages" && q.type !== "contacts" && q.type !== "social_media").map((q: any) => {
       const ans = answers[q.id];
       if (!ans) return null;
       const val = Array.isArray(ans) ? ans.join(", ") : ans;
       return `  ${q.label}\n  → ${val}`;
     }).filter(Boolean).join("\n\n");
-    return `APEX ONBOARDING SUBMISSION\n==========================\nName: ${formData.name}\nBusiness: ${formData.businessName}\nEmail: ${formData.email}\nPhone: ${formData.phone || "N/A"}\nIndustry: ${displayIndustry}\nPackage: ${selectedPackage?.name} — ${selectedPackage?.tier}\n\nLANDING PAGES (${landingPages.length})\n------------------------------\n${lpSummary}\n\nINTERVIEW ANSWERS\n------------------------------\n${qaSummary}`;
+    return `APEX ONBOARDING SUBMISSION\n==========================\nName: ${formData.name}\nBusiness: ${formData.businessName}\nEmail: ${formData.email}\nPhone: ${formData.phone || "N/A"}\nIndustry: ${displayIndustry}\nPackage: ${selectedPackage?.name} — ${selectedPackage?.tier}\n\nKEY CONTACTS (${contacts.filter(c => c.name.trim()).length})\n------------------------------\n${contactsSummary || "  None provided"}\n\nSOCIAL MEDIA ACCOUNTS (${socialAccounts.filter(s => s.platform.trim()).length})\n------------------------------\n${socialSummary || "  None provided"}\n\nLANDING PAGES (${landingPages.length})\n------------------------------\n${lpSummary}\n\nINTERVIEW ANSWERS\n------------------------------\n${qaSummary}`;
   };
 
   const handleSubmit = async () => {
@@ -203,6 +248,8 @@ export default function ApexOnboardingForm() {
           industry: displayIndustry,
           package: `${selectedPackage?.name} — ${selectedPackage?.tier}`,
           landing_pages: landingPages,
+          contacts,
+          social_accounts: socialAccounts,
           answers,
           full_summary: buildSummary(),
         }),
@@ -371,6 +418,77 @@ export default function ApexOnboardingForm() {
                   </div>
                 )}
 
+                {currentQuestion.type === "contacts" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {contacts.map((contact, i) => (
+                      <div key={i} style={{ border: `1.5px solid ${accentColor}30`, borderRadius: "16px", padding: "20px", background: `${accentColor}05` }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                          <span style={{ fontWeight: "700", color: accentColor, fontSize: "0.85rem" }}>Contact {i + 1}</span>
+                          {contacts.length > 1 && (
+                            <button onClick={() => removeContact(i)} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: "0.8rem" }}>✕ Remove</button>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                            <div>
+                              <label style={subLabelStyle}>Name *</label>
+                              <input style={inputStyle} placeholder="e.g. Jane Smith" value={contact.name} onChange={e => updateContact(i, "name", e.target.value)} />
+                            </div>
+                            <div>
+                              <label style={subLabelStyle}>Role / Title</label>
+                              <input style={inputStyle} placeholder="e.g. Marketing Director" value={contact.role} onChange={e => updateContact(i, "role", e.target.value)} />
+                            </div>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                            <div>
+                              <label style={subLabelStyle}>Email</label>
+                              <input style={inputStyle} type="email" placeholder="jane@company.com" value={contact.email} onChange={e => updateContact(i, "email", e.target.value)} />
+                            </div>
+                            <div>
+                              <label style={subLabelStyle}>Phone</label>
+                              <input style={inputStyle} placeholder="(555) 000-0000" value={contact.phone} onChange={e => updateContact(i, "phone", e.target.value)} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={addContact} style={{ border: `2px dashed ${accentColor}50`, borderRadius: "14px", padding: "14px", background: "transparent", color: accentColor, fontWeight: "700", fontSize: "0.875rem", cursor: "pointer" }}>
+                      + Add Another Contact
+                    </button>
+                  </div>
+                )}
+
+                {currentQuestion.type === "social_media" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {socialAccounts.map((account, i) => (
+                      <div key={i} style={{ border: `1.5px solid ${accentColor}30`, borderRadius: "16px", padding: "20px", background: `${accentColor}05` }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                          <span style={{ fontWeight: "700", color: accentColor, fontSize: "0.85rem" }}>Account {i + 1}</span>
+                          {socialAccounts.length > 1 && (
+                            <button onClick={() => removeSocial(i)} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: "0.8rem" }}>✕ Remove</button>
+                          )}
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                          <div>
+                            <label style={subLabelStyle}>Platform</label>
+                            <select style={inputStyle} value={account.platform} onChange={e => updateSocial(i, "platform", e.target.value)}>
+                              <option value="">Select platform...</option>
+                              {socialPlatforms.map(p => <option key={p} value={p}>{p}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={subLabelStyle}>Handle / URL</label>
+                            <input style={inputStyle} placeholder="e.g. @yourbrand" value={account.handle} onChange={e => updateSocial(i, "handle", e.target.value)} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={addSocial} style={{ border: `2px dashed ${accentColor}50`, borderRadius: "14px", padding: "14px", background: "transparent", color: accentColor, fontWeight: "700", fontSize: "0.875rem", cursor: "pointer" }}>
+                      + Add Another Platform
+                    </button>
+                  </div>
+                )}
+
                 {currentQuestion.type === "radio" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {currentQuestion.options.map((opt: string) => (
@@ -406,7 +524,12 @@ export default function ApexOnboardingForm() {
                   <input style={inputStyle} placeholder={currentQuestion.placeholder} value={(answers[currentQuestion.id] as string) || ""} onChange={e => updateAnswer(currentQuestion.id, e.target.value)} />
                 )}
                 {currentQuestion.type === "textarea" && (
-                  <textarea style={{ ...inputStyle, minHeight: "110px", resize: "vertical" }} placeholder={currentQuestion.placeholder} value={(answers[currentQuestion.id] as string) || ""} onChange={e => updateAnswer(currentQuestion.id, e.target.value)} />
+                  <div>
+                    {currentQuestion.helperText && (
+                      <p style={{ color: "#64748B", fontSize: "0.82rem", lineHeight: "1.5", marginBottom: "12px" }}>{currentQuestion.helperText}</p>
+                    )}
+                    <textarea style={{ ...inputStyle, minHeight: "110px", resize: "vertical" }} placeholder={currentQuestion.placeholder} value={(answers[currentQuestion.id] as string) || ""} onChange={e => updateAnswer(currentQuestion.id, e.target.value)} />
+                  </div>
                 )}
 
                 {currentQuestion.type === "info" && (
@@ -470,7 +593,7 @@ export default function ApexOnboardingForm() {
                     </div>
                   ))}
                   <div style={{ fontSize: "0.8rem", color: "#64748B", marginTop: "4px" }}>
-                    {landingPages.length} landing page{landingPages.length !== 1 ? "s" : ""} configured · {visibleQuestions.filter((q: { type: string }) => q.type !== "landing_pages").length} interview questions answered
+                    {contacts.filter(c => c.name.trim()).length} contact{contacts.filter(c => c.name.trim()).length !== 1 ? "s" : ""} · {socialAccounts.filter(s => s.platform.trim()).length} social account{socialAccounts.filter(s => s.platform.trim()).length !== 1 ? "s" : ""} · {landingPages.length} landing page{landingPages.length !== 1 ? "s" : ""} · {visibleQuestions.filter((q: { type: string }) => !["landing_pages", "contacts", "social_media"].includes(q.type)).length} questions answered
                   </div>
                 </div>
                 <button onClick={handleCopy} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: `2px solid ${accentColor}`, background: copied ? accentColor : "white", color: copied ? "white" : accentColor, fontWeight: "700", fontSize: "0.9rem", cursor: "pointer", transition: "all 0.2s", marginBottom: "12px" }}>
